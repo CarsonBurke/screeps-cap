@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+* {
+    padding: unset;
+    margin: unset;
+    font-family: 'Outfit', sans-serif;
+    color: white;
+}
+body {
+  margin:0;
+  padding:0;
+  background: black;
+}
+
+main {
+    display: flex;
+    gap: 10px;
+    padding: 0 10px;
+    height: 100vh;
+    justify-content: center;
+    overflow-y: hidden;
+}
+
+.introParent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.userTableParent tr:nth-child(odd) {
+  box-shadow: inset rgba(255, 255, 255, 0.1) 0 0 0 1000px;
+  padding: 5px;
+}
+
+.userTableInfoParent {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+}
+
+.usersParent {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  user-select: none;
+  display: flex;
+  width: fit-content;
+  gap: 5px;
+}
+
+.userParent {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  /* box-shadow: inset rgba(255, 255, 255, 0.1) 0 0 0 1000px;
+  background: black; */
+  padding: 2px 20px;
+  justify-content: center;
+  z-index: 1;
+  font-weight: 500;
+}
+
+.infoParentContainer {
+    padding: 10px;
+}
+
+.infoParent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mapContainer {
+    /*   width: calc(50px * 11 * 0.9);
+    height: calc(50px * 11 * 0.9); */
+    width: calc(100vh + 580px)/* calc(100vh - 20px + (580px / 2)) */;
+    height: calc(100vh - 20px);
+    position: relative;
+}
+    
+
+#map {
+/*   width: calc(50px * 11 * 0.9);
+  height: calc(50px * 11 * 0.9); */
+  position: relative;
+}
+
+.badge {
+    width: 16px;
+    margin-right: 2px;
+}
+#logo {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    color: white;
+}
+
+.battle {
+  display: flex;
+}
+.battle > div {
+  flex: 1;
+}
+.battle .room {
+  flex: 0 0 50px;
+}
+.battle .ticks {
+  text-align: right;
+  padding-right: 10px;
+}
+.battle .class {
+  text-align: left;
+  flex: 0 0 30px;
+}
+.battle .badges {
+  text-align: left;
+  flex: 0 0 48px;
+}
+.battles-enter-active, .battles-leave-active {
+  transition: all 1s;
+}
+.battles-enter, .battles-leave-to /* .list-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(50px);
+}
+.battles-move {
+  transition: transform 1s;
+}
+.users-enter-active, .users-leave-active {
+  transition: all 1s;
+}
+.users-enter, .users-leave-to /* .list-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(-50px);
+}
+.users-move {
+  transition: transform 1s;
+}

@@ -41,16 +41,17 @@ let chatRoomTimeout = 0
 let mapRoomsCache = null
 const ROOM_SWAP_INTERVAL = 10000
 
-const SCORE_MODE = 'gpl'
+const SCORE_MODE = 'roomLevels'
 // const SCORE_MODE = 'roomLevels'
 
 // const SERVER='swc'
 // const STREAM_TITLE = 'Screeps Warfare Championship'
 // const SLACK_CHANNEL = '#swc'
 
-const SERVER='powerarena'
-const STREAM_TITLE = 'PowerArena'
-const SLACK_CHANNEL = '#powerarena'
+const SERVER='pserver'
+const STREAM_TITLE = 'Bot Arena 214'
+const DESCRIPTION = 'An fully automated screeps AI competition'
+const MAX_USERS_SCOREBOARD = 15
 
 // const SERVER='botarena'
 // const STREAM_TITLE = 'BotArena'
@@ -65,15 +66,14 @@ const teamMap = [
 ]
 resetState()
 
-Vue.component('ba-header', {
+Vue.component('infoHeader', {
   props: ['state'],
   template: `
-    <div>
-      <div style="font-size: 24pt">${STREAM_TITLE}</div>
-      <div>https://screepspl.us/events/</div>
-      <div>http://chat.screeps.com ${SLACK_CHANNEL}</div>
+    <div class="introParent">
+      <h1 style="font-size: 24pt">${STREAM_TITLE}</h1>
+      <p class='infoDescription'>${DESCRIPTION}</p>
       <div>Room: {{state.room}}</div>
-      <div>Time: {{state.gameTime}}</div>
+      <div>Tick: {{state.gameTime}}</div>
     </div>`,
 })
 
@@ -81,7 +81,7 @@ Vue.component('scoreboard', {
   props: [],
   template: `
     <div>
-      <table>
+      <table class='userTableParent'>
         <tr>
           <th>#</th>
           <th style="text-align: left">Username</th>
@@ -90,7 +90,7 @@ Vue.component('scoreboard', {
         </tr>
         <tr v-for="(record, index) in slicedRecords" :key="record.username" v-if="!slicedTeams.length">
           <td>{{ index+1 }})</td>
-          <td><img class="badge" :src="badgeURL(record.username)">{{record.username}}</td>
+          <td class='userTableInfoParent'><img class="badge" :src="badgeURL(record.username)">{{record.username}}</td>
           <td style="text-align: center">{{record.rooms}}</td>
           <td style="text-align: center">{{record.score}}</td>
         </tr>
@@ -103,14 +103,13 @@ Vue.component('scoreboard', {
           </tr>
           <tr v-for="(record, index) in team.users" :key="record.username">
             <td></td>
-            <td><img class="badge" :src="badgeURL(record.username)">{{record.username}}</td>
+            <td class='userTableInfoParent'><img class="badge" :src="badgeURL(record.username)">{{record.username}}</td>
             <td style="text-align: center">{{record.rooms}}</td>
             <td style="text-align: center">{{record.score}}</td>
           </tr>
         </template>
       </table>
-      <div v-if="records.length > 15">Only top 15 players listed</div>
-      <div v-if="scoreMode === 'roomLevels'">Note: Score does not check for active spawns</div>
+      <div v-if="records.length > ${MAX_USERS_SCOREBOARD}">and {{records.length - ${MAX_USERS_SCOREBOARD}}} more</div>
     </div>
     `,
   data() {
@@ -137,12 +136,14 @@ Vue.component('scoreboard', {
           if (!own || !own.level) continue
           if (!uids[own.user]) {
             uids[own.user] = {
-              uid: own.user,
+              uid: own.user, 
               rooms: 1,
-              score: 0
+              score: own.level
             }
+
+            continue
           }
-          uids[own.user].rooms++
+          uids[own.user].rooms += 1
           uids[own.user].roomLevels += own.level
           uids[own.user].score += own.level
         }
@@ -170,7 +171,7 @@ Vue.component('scoreboard', {
       return records
     },
     slicedRecords() {
-      return this.records.slice(0, 15)
+      return this.records.slice(0, MAX_USERS_SCOREBOARD)
     },
     slicedTeams() {
       const noTeamUsers = new Set(this.records)
@@ -208,7 +209,7 @@ Vue.component("pvp-battles", {
   props: ['state'],
   template: `
     <div>
-      <div>Recent Battles:</div>
+      <h2>Recent Battles</h2>
       <transition-group name="battles">
         <div class="battle" v-for="b in battles" :key="b.room">
           <div class="room">{{ b.room }}</div>
@@ -235,10 +236,10 @@ Vue.component("pvp-battles", {
 })
 
 const app = new Vue({
-  el: '#infoDiv',
+  el: '#infoParentContainer',
   template: `
-    <div id="infoDiv">
-      <ba-header :state="state"></ba-header>
+    <div class="infoParent">
+      <infoHeader :state="state"></infoHeader>
       <scoreboard></scoreboard>
       <br>
       <pvp-battles :state="state"></pvp-battles>
@@ -253,14 +254,12 @@ const app = new Vue({
 const app2 = new Vue({
   el: '#usersDiv',
   template: `
-    <div id="usersDiv">
-      <transition-group name="users">
-        <div v-for="user in users" :key="user._id">
+        <div name="users" class='usersParent'>
+        <div class='userParent' v-for="user in users" :key="user._id">
           <img class="badge" :src="user.badgeUrl">
-          {{user.username}}
+          <p>{{user.username}}</p>
         </div>
-      </transition-group>
-    </div>`,
+      `,
   data() {
     return { state }
   },
@@ -271,11 +270,6 @@ const app2 = new Vue({
   }
 })
 
-// Restart occasionally, sometimes the cycle breaks, this helps auto-recover
-setTimeout(() => window.close(), 30 * 60 * 1000)
-document.addEventListener('DOMContentLoaded', () => {
-  map.setZoomFactor(0.9)
-})
 let bias = 0
 async function roomSwap() {
   // return setRoom('E7N5')
@@ -285,8 +279,8 @@ async function roomSwap() {
         //   api.raw.experimental.pvp(90)
         //   warpath().catch(() => ({})) // Catch handles being ran in non-warpath capable setups
         // ])
-      const pvp = api.raw.experimental.pvp(90)
-      const [shard = 'shard0'] = Object.keys(pvp)
+      /* const pvp = api.raw.experimental.pvp(90)
+      const [shard = 'shard0'] = Object.keys(pvp) */
       const battles = state.battles.filter(r => r.lastPvpTime > state.gameTime - 20)
       const now = Date.now()
       let room = ''
@@ -406,7 +400,8 @@ async function run() {
     }, 100)
   }
 
-  const view = mainDiv
+  const view = document.getElementById('mapContainer')
+  console.log('view', view)
   cachedObjects = {}
   const say = worldConfigs.metadata.objects.creep.processors.find(p => p.type === 'say')
   say.when = ({ state: { actionLog: { say } = {} } }) => !!say && say.isPublic
@@ -442,8 +437,8 @@ async function run() {
     renderer.setTerrain(t)
   }
   renderer.resize()
-  renderer.zoomLevel = 0.19 //view.offsetHeight / 5000
-  console.log(renderer.zoomLevel, view.offsetWidth, view.clientWidth)
+  renderer.zoomLevel = /* 0.19 */ view.offsetHeight / 5000
+
   await api.socket.connect()
   api.socket.subscribe('warpath:battles')
   api.socket.subscribe('stats:full')
@@ -452,8 +447,8 @@ async function run() {
   api.socket.on('warpath:battles', ({ data }) => processBattles(data))
   api.socket.on('stats:full', ({ data }) => processStats(data))
   api.socket.on('message', async ({ type, channel, id, data, data: { gameTime = 0, info, objects, users = {}, visual } = {} }) => {
-    if (type )
-    if (type !== 'room') return
+
+    if (type && type !== 'room') return
     if (state.reseting) return console.log('racing')
     if (id !== currentRoom) return await api.socket.unsubscribe(`room:${id}`)
     let { tick: tickSpeed = 1 } = await api.req('GET', '/api/game/tick')
@@ -657,7 +652,6 @@ async function minimap() {
         const size = (roomInfo.own.level * (20 / 8)) + 15
         this.badge.width = size
         this.badge.height = size
-        this.badge.alpha = roomInfo.own.level ? 0.5 : 0.4
       }
     }
   }
@@ -685,7 +679,6 @@ async function minimap() {
     }
   }, 1000)
   const highlight = new PIXI.Graphics()
-  // highlight.alpha = 0.5
   miniMap.addChild(highlight)
   setInterval(async () => {
     highlight.clear()
@@ -693,30 +686,31 @@ async function minimap() {
       const ticks = Math.max(0, state.gameTime - lastPvpTime)
       const { x, y } = XYFromRoom(room)
       highlight
-        .lineStyle(1, 0xFF0000, 1 - (ticks / 100))
+        .lineStyle(2, 0xFF0000, 1 - (ticks / 100))
         .drawRect((x * 50), (y * 50), 50, 50)
     })
     if (currentRoom) {
       const { x, y } = XYFromRoom(currentRoom)
       highlight
-        .lineStyle(1, 0x00FF00, 0.6)
+        .lineStyle(2, 0x00FF00, 0.6)
         .drawRect((x * 50), (y * 50), 50, 50)
     }
   }, 500)
 
 
+  const view = document.getElementById('mapContainer')
   const width = 580
-  const xOffset = width + 10
 
   miniMap.rotation = rotateMap
 
-  miniMap.x = -xOffset * (1 / renderer.app.stage.scale.x)
+  /* miniMap.x = -xOffset * (1 / renderer.app.stage.scale.x) */
   miniMap.width = width * (1 / renderer.app.stage.scale.x) * 0.95
   miniMap.scale.y = miniMap.scale.x
-  miniMap.x += 50 * 10.5 * miniMap.scale.x
+  miniMap.x += miniMap.width * 1.25 /* miniMap.scale.y */ /* view.offsetWidth */ /* renderer.app.stage.width + width */ /* - miniMap.width */
   miniMap.y += 50 * 10.5 * miniMap.scale.y
-  renderer.app.stage.position.x = xOffset
+
   renderer.app.stage.mask = undefined
+
   // const mask = new PIXI.Graphics()
   // const { CELL_SIZE, VIEW_BOX } = worldConfigs
   // mask.drawRect(-CELL_SIZE / 2, -CELL_SIZE / 2, VIEW_BOX, VIEW_BOX)
